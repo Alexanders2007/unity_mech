@@ -1,44 +1,43 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
- 
+
 public class Player2 : MonoBehaviour
 {
-    public float length = 5f;  // длина маятника
-    public Text countText;    // UI text for the counter
-    public Text winText;      // UI text for the win message
-        // Начальные условия движения
-    public float angle = Mathf.PI / 4; // начальный угол отклонения (45 градусов в радианах)
-    public float angularVelocity = 0f; // начальная угловая скорость
-    private Rigidbody rb;
-    private int count;
-    private float omega;      // угловая частота
-    private Vector3 initialPosition; // начальная позиция объекта
+    public Vector3 initialPosition; // Начальная позиция игрока
+    public float gravityStrength = 9.8f; // Сила гравитационного поля
+    public float mass = 1.0f; // Масса игрока
+    public Vector3 centralForcePosition = new Vector3(0, 0, 0); // Позиция центральной силы (точка 0, 0, 0)
+    public Vector3 initialVelocity = Vector3.zero; // Начальная скорость игрока
+
+    private Rigidbody rb; // Компонент Rigidbody игрока
 
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
-        count = 0;
-        initialPosition = transform.position; // сохраняем начальную позицию
-        omega = Mathf.Sqrt(Physics.gravity.magnitude / length); // вычисляем угловую частоту
+        // Инициализация начальной позиции
+        transform.position = initialPosition;
+        rb = GetComponent<Rigidbody>(); // Получение компонента Rigidbody
+        if (rb == null)
+        {
+            rb = gameObject.AddComponent<Rigidbody>(); // Добавление компонента Rigidbody, если он отсутствует
+        }
+        rb.useGravity = false; // Отключение гравитации Unity, так как мы используем свою
+        rb.mass = mass; // Установка массы объекта
+        rb.velocity = initialVelocity; // Установка начальной скорости
     }
 
     void FixedUpdate()
     {
-        // Обновляем угловое ускорение
-        float angularAcceleration = -(Physics.gravity.magnitude / length) * Mathf.Sin(angle);
+        // Вычисление вектора направления от игрока к центральной силе
+        Vector3 direction = centralForcePosition - transform.position;
+        float distance = direction.magnitude;
 
-        // Обновляем угловую скорость и угол отклонения с использованием метода Эйлера
-        angularVelocity += angularAcceleration * Time.fixedDeltaTime;
-        angle += angularVelocity * Time.fixedDeltaTime;
+        // Избегаем деления на ноль
+        if (distance > 0)
+        {
+            // Вычисление гравитационной силы
+            Vector3 gravitationalForce = direction.normalized * (gravityStrength * rb.mass * mass / (distance * distance));
 
-        // Расчет положения объекта
-        float x = length * Mathf.Sin(angle); // положение x(t)
-        float y = -length * Mathf.Cos(angle); // положение y(t) (отрицательное, так как вниз)
-
-        // Целевая позиция
-        Vector3 targetPosition = initialPosition + new Vector3(x, y, 0f);
-
-        // Плавное перемещение к целевой позиции
-        transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * 5f);
+            // Применение силы к Rigidbody
+            rb.AddForce(gravitationalForce);
+        }
     }
 }
