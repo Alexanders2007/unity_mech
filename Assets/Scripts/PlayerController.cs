@@ -10,7 +10,7 @@ public class PlayerController : MonoBehaviour
     public Text countText;  // текст для счётчика
     public Text winText;  // текст для победы
     public GameObject obstacle; // объект препятствия
-    public float springoobstacle;
+    public float springoobstacle;  //коэффициент упругости препятствия
 
     private Rigidbody rb;
     private int count;
